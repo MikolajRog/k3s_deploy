@@ -1,0 +1,106 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: ns-lab-2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: whoami-bis
+  name: whoami-bis
+  namespace: ns-lab-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whoami-bis
+  template:
+    metadata:
+      labels:
+        app: whoami-bis
+    spec:
+      containers:
+      - image: traefik/whoami:v1.11
+        name: whoami-bis
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whoami-bis
+  namespace: ns-lab-2
+spec:
+  selector:
+    app: whoami-bis
+  type: ClusterIP
+  ports:
+  - name: whoami-bis
+    protocol: TCP
+    port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: whoami-bis
+  namespace: ns-lab-2
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: acme-priv-issuer
+    acme.cert-manager.io/http01-edit-in-place: "true"
+  # ---
+spec:
+  tls:
+  - hosts:
+    - whoami-bis.k3sapp.net
+    secretName: whoami-bis-tls-secret
+  ingressClassName: traefik
+  rules:
+  - host: whoami-bis.k3sapp.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: whoami-bis
+            port:
+              number: 80
+---
+# --- middleware+ingress added for redirect
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: whoami-bis-redirect
+  namespace: ns-lab-2
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: whoami-bis-redirect
+  namespace: ns-lab-2
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    # MUST be <namespace>-<name>@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: ns-lab-2-whoami-bis-redirect@kubernetescrd
+spec:
+  rules:
+  - host: whoami-bis.k3sapp.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: whoami-bis
+            port:
+              number: 80
