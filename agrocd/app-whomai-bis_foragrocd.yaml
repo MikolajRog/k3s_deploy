@@ -12,8 +12,5 @@ spec:
     server: https://kubernetes.default.svc
     namespace: ns-lab-2
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
     syncOptions:
       - CreateNamespace=true
