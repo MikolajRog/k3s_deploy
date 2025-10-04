@@ -6,7 +6,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/MikolajRog/k3s_deploy.git
-    path: .
+    path: whoami-bis
     targetRevision: main
   destination:
     server: https://kubernetes.default.svc
