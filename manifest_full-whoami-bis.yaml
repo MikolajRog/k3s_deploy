@@ -28,6 +28,22 @@ spec:
         ports:
         - containerPort: 80
 ---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: acme-priv-issuer
+spec:
+  acme:
+    server: https://acme-priv-proxmox.net:8443/acme/acme/directory
+    email: nic2000@wp.pl           # Twój e-mail
+    privateKeySecretRef:
+      name: step-ca-account-key
+    solvers:
+    - http01:
+        ingress:
+          class: traefik
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURVekNDQWp1Z0F3SUJBZ0lVRytHS0NvdVlhOFE4Q3VDa01uVzh2eFQramowd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0ZURVRNQkVHQTFVRUF3d0tUWGtnVW05dmRDQkRRVEFlRncweU5UQTNNREV4T0RFeU16SmFGdzB6TURBMgpNekF4T0RFeU16SmFNQm94R0RBV0JnTlZCQU1NRDBsdWRHVnliV1ZrYVdGMFpTQkRRVENDQVNJd0RRWUpLb1pJCmh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTHpJVFdQelg4Y2dsZ3dDMTVpSXgrM0JNSGxsZVp0WklNbzAKZDhRSzdqbmdEREh2Y1pFOVRXMVRHekNXbUMxWXlFdE5ickxXWkZNKzRlZTVPblhiZDlCSXBva3VScFNWUlBnZgpGTEdpa1ljbldSSUVYWEJvNVQzUlN5NnV4WHl2MUo0ZHdNTzRjSDloajYxTXVOS0FQN3paWmhYcjBvb2lpbkZICkRhVHpqbEI2a2pmZG9peW9URExuVEZLTFg5S3RTdXRYd2xTbkNZNXhJMkpsTWRqTlJXMWtXU1NGWFcwU2laN1IKTVZBYlZ4VDQxQzIyc2hUVG5UaXRxcnRLK0FpNGZscEc5enpydmljWjBHMmhoUC9yZTN0d2oxMlhCZDdqaTl3OAoydEN3alpSNlBUTU5uU1kzTHFROVJtaVRVNUMrckV6L3MwUXlzcTBRS3FCaTZlMmpqYkVDQXdFQUFhT0JsVENCCmtqQVBCZ05WSFJNRUNEQUdBUUgvQWdFQU1BNEdBMVVkRHdFQi93UUVBd0lCaGpBZEJnTlZIUTRFRmdRVUVPSEEKelMxUTF0aDVUUFdzU1JoK3FiMDFNT1l3VUFZRFZSMGpCRWt3UjRBVWp5bGlLL015KzV6S29YOGQxSTNSK0ZLcgppcE9oR2FRWE1CVXhFekFSQmdOVkJBTU1DazE1SUZKdmIzUWdRMEdDRkRVcm5tcEVLUE9NaXBKNWRWS0s2ZXNHCk10T3BNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUIyaTVwY0kzTzIwZWRDUzBHNmZySEtUbDVFVDNEWVhNTTMKK3VUZzJMdWZlRCtRemJpT2w3TFFJQzJpU3hrTWFKK2o0VERHckF0MjhSb0hYdzdZQ2RjbllpbEw1WFR5SjZzRQpLWWdid1RzampkZnp1N1psUkFzZ3FJSFpRdXZndURYeDZ3MHk1TERRTzVsdG51QWxGVkY1Rm1tMHVXazNzeVFVCnUzY25LOVJyQkZ4MEFZazBjU1BjMXNYT29hL3o4VStvQzNvOVV6MVBvY0VoR0xDZk9mV0hUbGk0QlcxTE5ZNkEKMDBCU2JxTmJ3aVlmY2dnS1MrdnBoVVhkRFk2U2luSEZGSkhkZytQYVFtdzVjZjNrVTVKMENzbUc5M0NxaDJ5VQp0TXd3aVR2Z3hTeUtKSUhadURXVnVueE0wSkpGSC8yYkI1UmJpSi9vLzhGL0NGU2lmajVwCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -72,7 +88,6 @@ spec:
             port:
               number: 80
 ---
-# --- middleware+ingress added for redirect
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -90,7 +105,6 @@ metadata:
   namespace: ns-lab-2
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
-    # MUST be <namespace>-<name>@kubernetescrd
     traefik.ingress.kubernetes.io/router.middlewares: ns-lab-2-whoami-bis-redirect@kubernetescrd
 spec:
   rules:
