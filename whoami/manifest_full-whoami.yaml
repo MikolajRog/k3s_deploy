@@ -35,7 +35,7 @@ metadata:
 spec:
   acme:
     server: https://acme-priv-proxmox.net:8443/acme/acme/directory
-    email: nic2000@wp.pl           # Twój e-mail
+    email: nic2000@wp.pl
     privateKeySecretRef:
       name: step-ca-account-key
     solvers:
